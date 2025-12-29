@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anchoring Experiment | Choice Lab</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand">
+        <div class="logo">CL</div>
+        <div>
+          <div class="title">Choice Lab</div>
+          <div class="subtitle">Anchoring（アンカリング）</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="../index.html">ホーム</a>
+        <a class="navlink" href="./anchoring.html">この実験</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container exp-wrap">
+    <div class="exp-grid">
+      <section class="card">
+        <h2>状況</h2>
+        <p class="muted">
+          ある「ノイズキャンセリングイヤホン」の適正価格を推定します。<br>
+          先に見える数字（アンカー）が、あなたの推定に影響するかを見ます。
+        </p>
+
+        <div id="anchorBox" class="notice">
+          <b>参考（先に見える数字）：</b>
+          <span class="kbd" id="anchorText">—</span>
+        </div>
+
+        <div class="inputbox" style="margin-top:14px;">
+          <div class="muted small">あなたの推定価格（円）</div>
+          <div class="row" style="justify-content:space-between;">
+            <div id="priceLabel" class="big">—</div>
+            <span class="badge">範囲: <b>0〜20000</b></span>
+          </div>
+
+          <input id="range" class="range" type="range" min="0" max="20000" step="100" value="9000" />
+
+          <div class="row" style="margin-top:12px;">
+            <button id="submitBtn" class="btn" type="button">この価格で決定</button>
+            <a class="btn btn-ghost" href="../index.html">ホームへ</a>
+          </div>
+        </div>
+
+        <div id="resultBox" class="inputbox" style="margin-top:14px; display:none;">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted small">あなたの推定（正規化）</div>
+              <div id="youNorm" class="big">—</div>
+            </div>
+            <div>
+              <div class="muted small">モデル予測（正規化）</div>
+              <div id="modelNorm" class="big">—</div>
+            </div>
+          </div>
+
+          <canvas id="diffChart" class="chart" width="800" height="320" style="margin-top:12px;"></canvas>
+
+          <details style="margin-top:12px;">
+            <summary>なぜ起こる？（解説）</summary>
+            <p class="muted small">
+              アンカリングは、最初に提示された数値が「基準」になってしまい、
+              そこからの調整（十分な修正）が起こりにくい現象です。
+              価格・時間・距離など、定量判断で頻出します。
+              ここではアンカー値からの引力を簡単なモデルで再現し、比較表示しています。
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h3>この実験のポイント</h3>
+        <ul class="muted small">
+          <li>最初の数字が、その後の推定を引きずる</li>
+          <li>見積もり・価格提示・KPIの「基準設定」に影響</li>
+          <li>結果は端末内にのみ保存</li>
+        </ul>
+        <div class="inputbox" style="margin-top:12px;">
+          <div class="muted small">ヒント</div>
+          <div class="small">アンカーが高い/低いと、あなたはどちらに寄りましたか？</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script type="module">
+    import { addEvent } from "../lib/storage.js";
+    import { modelAnchoring } from "../lib/model.js";
+    import { diffBar } from "../lib/charts.js";
+
+    const MIN = 0, MAX = 20000;
+
+    // Random anchor: low or high
+    const anchor = (Math.random() < 0.5) ? 3000 : 16000;
+    document.getElementById("anchorText").textContent = `${anchor.toLocaleString("ja-JP")} 円`;
+
+    const range = document.getElementById("range");
+    const priceLabel = document.getElementById("priceLabel");
+
+    function refresh(){
+      const v = Number(range.value);
+      priceLabel.textContent = `${v.toLocaleString("ja-JP")} 円`;
+    }
+    refresh();
+    range.addEventListener("input", refresh);
+
+    const submitBtn = document.getElementById("submitBtn");
+    const resultBox = document.getElementById("resultBox");
+
+    submitBtn.addEventListener("click", ()=>{
+      const value = Number(range.value);
+      const valueNorm = (value - MIN) / (MAX - MIN);
+
+      const predNorm = modelAnchoring({ anchorValue: anchor, min: MIN, max: MAX });
+
+      addEvent({
+        exp: "anchoring",
+        cond_anchor: anchor,
+        value,
+        value_norm: valueNorm,
+        model_pred: predNorm
+      });
+
+      document.getElementById("youNorm").textContent = valueNorm.toFixed(2);
+      document.getElementById("modelNorm").textContent = predNorm.toFixed(2);
+
+      const canvas = document.getElementById("diffChart");
+      diffBar(canvas, valueNorm, predNorm);
+
+      resultBox.style.display = "block";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "記録しました";
+    });
+  </script>
+</body>
+</html>
