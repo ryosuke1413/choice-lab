@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Default Experiment | Choice Lab</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand">
+        <div class="logo">CL</div>
+        <div>
+          <div class="title">Choice Lab</div>
+          <div class="subtitle">Default（デフォルト効果）</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="../index.html">ホーム</a>
+        <a class="navlink" href="./default.html">この実験</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container exp-wrap">
+    <div class="exp-grid">
+      <section class="card">
+        <h2>状況</h2>
+        <p class="muted">
+          新しいアプリの「便利な提案機能」を使うかどうかを選びます。<br>
+          <span class="kbd">初期設定（ON/OFF）</span>があなたの選択に影響するかを見ます。
+        </p>
+
+        <div class="notice">
+          <b>ルール：</b>深く考えず、直感で選んでください（30秒でOK）。
+        </div>
+
+        <div class="inputbox" style="margin-top:14px;">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted small">提案機能</div>
+              <div class="big">「おすすめを自動提案する」</div>
+            </div>
+            <span id="condBadge" class="badge">初期設定: <b>—</b></span>
+          </div>
+
+          <div style="margin-top:12px;" class="switch">
+            <input id="toggle" type="checkbox" />
+            <label for="toggle">提案機能を使う（ON）</label>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <button id="submitBtn" class="btn" type="button">この設定で決定</button>
+            <a class="btn btn-ghost" href="../index.html">ホームへ</a>
+          </div>
+        </div>
+
+        <div id="resultBox" class="inputbox" style="margin-top:14px; display:none;">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted small">あなたの選択</div>
+              <div id="youChoice" class="big">—</div>
+            </div>
+            <div>
+              <div class="muted small">モデル予測（P(ON)）</div>
+              <div id="modelPred" class="big">—</div>
+            </div>
+          </div>
+
+          <canvas id="diffChart" class="chart" width="800" height="320" style="margin-top:12px;"></canvas>
+
+          <details style="margin-top:12px;">
+            <summary>なぜ起こる？（解説）</summary>
+            <p class="muted small">
+              デフォルト（初期値）は「現状維持」で済むため、変更コスト（手間・不安）を避けたい心理と結びつきます。
+              その結果、<b>初期値がONだとONを、OFFだとOFFを選びやすい</b>傾向が出ます。
+              このページでは、比較のために簡易ロジットモデルで「P(ON)」を表示しています。
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h3>この実験のポイント</h3>
+        <ul class="muted small">
+          <li>同じ説明でも、初期値が違うだけで選択が変わる</li>
+          <li>プロダクトでは「オンボーディング」や「設定」で頻出</li>
+          <li>結果は端末内にのみ保存（送信しません）</li>
+        </ul>
+        <div class="inputbox" style="margin-top:12px;">
+          <div class="muted small">ヒント</div>
+          <div class="small">「一度決めた後に、なぜそうしたか」もメモすると面接で話せます。</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script type="module">
+    import { addEvent } from "../lib/storage.js";
+    import { modelDefault } from "../lib/model.js";
+    import { diffBar } from "../lib/charts.js";
+
+    // Condition randomization (50/50)
+    const condDefaultOn = Math.random() < 0.5;
+
+    const badge = document.getElementById("condBadge");
+    badge.innerHTML = `初期設定: <b>${condDefaultOn ? "ON" : "OFF"}</b>`;
+
+    const toggle = document.getElementById("toggle");
+    toggle.checked = condDefaultOn; // set default
+
+    const submitBtn = document.getElementById("submitBtn");
+    const resultBox = document.getElementById("resultBox");
+
+    submitBtn.addEventListener("click", ()=>{
+      const chosenOn = toggle.checked;
+      const choice = chosenOn ? 1 : 0;
+
+      const pred = modelDefault({ isDefaultOn: condDefaultOn, friction: 0.15 });
+
+      addEvent({
+        exp: "default",
+        cond_default_on: condDefaultOn,
+        choice,
+        model_pred: pred
+      });
+
+      document.getElementById("youChoice").textContent = chosenOn ? "ON（使う）" : "OFF（使わない）";
+      document.getElementById("modelPred").textContent = pred.toFixed(2);
+
+      const canvas = document.getElementById("diffChart");
+      diffBar(canvas, choice, pred);
+
+      resultBox.style.display = "block";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "記録しました";
+    });
+  </script>
+</body>
+</html>
