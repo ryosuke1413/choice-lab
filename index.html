@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Choice Lab</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand">
+        <div class="logo">CL</div>
+        <div>
+          <div class="title">Choice Lab</div>
+          <div class="subtitle">UIが意思決定をどう歪めるか、3分で体験</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="./index.html">ホーム</a>
+        <a class="navlink" href="#records">あなたの記録</a>
+        <a class="navlink" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-card">
+        <h1>“同じ人でも、出し方が変わると選択が変わる”</h1>
+        <p class="muted">
+          3つのミニ実験で、<b>デフォルト効果</b>・<b>アンカリング</b>・<b>社会的証明</b>を体験できます。
+          結果は端末内（localStorage）にだけ保存され、あなたの傾向を可視化します。
+        </p>
+        <div class="pillrow">
+          <span class="pill">ビルド不要</span>
+          <span class="pill">依存なし</span>
+          <span class="pill">スマホ対応</span>
+          <span class="pill">ロジットモデル比較</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid3">
+      <a class="card link" href="./exp/default.html">
+        <div class="card-head">
+          <h2>Default（デフォルト効果）</h2>
+          <div class="tag">約30秒</div>
+        </div>
+        <p class="muted">初期設定（ON/OFF）が、選択をどれだけ動かすか。</p>
+        <div class="mini">
+          <div class="mini-row"><span>学べること</span><span>初期値の影響</span></div>
+          <div class="mini-row"><span>入力</span><span>ON/OFF</span></div>
+        </div>
+      </a>
+
+      <a class="card link" href="./exp/anchoring.html">
+        <div class="card-head">
+          <h2>Anchoring（アンカリング）</h2>
+          <div class="tag">約45秒</div>
+        </div>
+        <p class="muted">先に見た数字が、その後の推定を引きずる現象。</p>
+        <div class="mini">
+          <div class="mini-row"><span>学べること</span><span>基準値の引力</span></div>
+          <div class="mini-row"><span>入力</span><span>価格推定</span></div>
+        </div>
+      </a>
+
+      <a class="card link" href="./exp/social-proof.html">
+        <div class="card-head">
+          <h2>Social Proof（社会的証明）</h2>
+          <div class="tag">約30秒</div>
+        </div>
+        <p class="muted">「多くの人が選ぶ」が、安心感として働く。</p>
+        <div class="mini">
+          <div class="mini-row"><span>学べること</span><span>多数派の圧</span></div>
+          <div class="mini-row"><span>入力</span><span>選択</span></div>
+        </div>
+      </a>
+    </section>
+
+    <section id="records" class="section">
+      <div class="section-head">
+        <h2>あなたの記録</h2>
+        <div class="actions">
+          <button id="resetBtn" class="btn btn-ghost" type="button">記録をリセット</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>サマリー</h3>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">累計試行</div>
+              <div id="totalTrials" class="stat-value">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">偏りスコア</div>
+              <div id="biasScore" class="stat-value">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">最後の実験</div>
+              <div id="lastExp" class="stat-value">—</div>
+            </div>
+          </div>
+          <p class="muted small">
+            偏りスコアは「モデル平均との差（絶対値）の平均」です。大きいほど、UI要因の影響を受けやすい傾向を示します（参考値）。
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>実験別の回数</h3>
+          <canvas id="countChart" class="chart" width="800" height="380" aria-label="試行回数チャート"></canvas>
+          <p class="muted small">端末内のみで集計しています。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h3>最近の結果（最新10件）</h3>
+          <div class="actions">
+            <button id="exportBtn" class="btn btn-ghost" type="button">JSONとして表示</button>
+          </div>
+        </div>
+        <div class="tablewrap">
+          <table class="table" aria-label="最近の結果">
+            <thead>
+              <tr>
+                <th>日時</th>
+                <th>実験</th>
+                <th>条件</th>
+                <th>選択/値</th>
+                <th>モデル予測</th>
+              </tr>
+            </thead>
+            <tbody id="recentTbody"></tbody>
+          </table>
+        </div>
+        <pre id="exportBox" class="codebox hidden"></pre>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="muted small">
+        Choice Lab — localStorageのみ使用。個人情報は送信しません。
+      </div>
+    </footer>
+  </main>
+
+  <script type="module" src="./assets/app.js"></script>
+</body>
+</html>
