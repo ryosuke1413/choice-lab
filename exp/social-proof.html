@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Social Proof Experiment | Choice Lab</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand">
+        <div class="logo">CL</div>
+        <div>
+          <div class="title">Choice Lab</div>
+          <div class="subtitle">Social Proof（社会的証明）</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="../index.html">ホーム</a>
+        <a class="navlink" href="./social-proof.html">この実験</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container exp-wrap">
+    <div class="exp-grid">
+      <section class="card">
+        <h2>状況</h2>
+        <p class="muted">
+          2つの学習プランから1つ選びます。<br>
+          「多くの人が選んでいる」という情報が、選択に影響するかを見ます。
+        </p>
+
+        <div id="proofBox" class="notice" style="display:none;">
+          <b>参考情報：</b>
+          <span class="kbd">このプランは多くの人に選ばれています</span>
+        </div>
+
+        <div class="inputbox" style="margin-top:14px;">
+          <div class="muted small">どちらを選びますか？</div>
+
+          <div class="radio" style="margin-top:10px;">
+            <label>
+              <input type="radio" name="plan" value="A" checked />
+              <span><b>プランA</b>：短時間で要点を固める</span>
+            </label>
+            <label>
+              <input type="radio" name="plan" value="B" />
+              <span><b>プランB</b>：じっくり基礎から積む</span>
+            </label>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <button id="submitBtn" class="btn" type="button">このプランで決定</button>
+            <a class="btn btn-ghost" href="../index.html">ホームへ</a>
+          </div>
+        </div>
+
+        <div id="resultBox" class="inputbox" style="margin-top:14px; display:none;">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted small">あなたの選択</div>
+              <div id="youChoice" class="big">—</div>
+            </div>
+            <div>
+              <div class="muted small">モデル予測（P(A)）</div>
+              <div id="modelPred" class="big">—</div>
+            </div>
+          </div>
+
+          <canvas id="diffChart" class="chart" width="800" height="320" style="margin-top:12px;"></canvas>
+
+          <details style="margin-top:12px;">
+            <summary>なぜ起こる？（解説）</summary>
+            <p class="muted small">
+              社会的証明は「多数派＝安全」という近道判断が働くことで起こります。
+              情報が少ないときほど、他者の選択を手がかりにしやすい傾向があります。
+              ここでは「人気表示の有無」で、選択確率がどう動くかを簡易モデルで比較しています。
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h3>この実験のポイント</h3>
+        <ul class="muted small">
+          <li>「多くの人が選ぶ」は安心感として効く</li>
+          <li>レビュー数・ランキング・“人気”バッジで頻出</li>
+          <li>結果は端末内のみ保存</li>
+        </ul>
+        <div class="inputbox" style="margin-top:12px;">
+          <div class="muted small">ヒント</div>
+          <div class="small">あなたは「人気表示」で選択が変わりましたか？</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script type="module">
+    import { addEvent } from "../lib/storage.js";
+    import { modelSocialProof } from "../lib/model.js";
+    import { diffBar } from "../lib/charts.js";
+
+    const showProof = Math.random() < 0.5;
+    const proofBox = document.getElementById("proofBox");
+    if(showProof) proofBox.style.display = "block";
+
+    const submitBtn = document.getElementById("submitBtn");
+    const resultBox = document.getElementById("resultBox");
+
+    submitBtn.addEventListener("click", ()=>{
+      const picked = document.querySelector('input[name="plan"]:checked').value;
+      const choiceA = (picked === "A") ? 1 : 0;
+
+      const pred = modelSocialProof({ showProof, strength: 0.95 });
+
+      addEvent({
+        exp: "social_proof",
+        cond_proof: showProof,
+        choice: choiceA,
+        model_pred: pred
+      });
+
+      document.getElementById("youChoice").textContent = picked === "A" ? "プランA" : "プランB";
+      document.getElementById("modelPred").textContent = pred.toFixed(2);
+
+      const canvas = document.getElementById("diffChart");
+      diffBar(canvas, choiceA, pred);
+
+      resultBox.style.display = "block";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "記録しました";
+    });
+  </script>
+</body>
+</html>
